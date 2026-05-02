@@ -41,3 +41,5 @@ Si tienes conflictos de puertos con otros proyectos o contenedores y necesitas c
 
 - **Para cambiar el puerto del frontend**: Modifica la variable `FRONTEND_PORT` en tu `.env` (por ejemplo: `FRONTEND_PORT=8080`). El contenedor internamente siempre usa el puerto 80 gracias a Nginx.
 - **Para cambiar el puerto del backend**: Modifica la variable `PORT` en tu `.env`. **¡Atención!** Si cambias el `PORT` del backend, también debes actualizar la variable `VITE_API_URL` en tu `.env` para que el frontend sepa dónde conectarse. Por ejemplo, si usas `PORT=4000`, debes poner `VITE_API_URL=http://localhost:4000/api`.
+
+Enlace al repositorio: [https://github.com/EnyaGalvez/ProyectoTiendaDB.git](https://github.com/EnyaGalvez/ProyectoTiendaDB.git)
