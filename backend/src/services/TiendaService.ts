@@ -1,5 +1,5 @@
-import { pool } from '../config/database';
-import { getSqlQuery } from '../utils/sqlReader';
+import { pool } from '../config/database.js';
+import { getSqlQuery } from '../utils/sqlReader.js';
 
 export class TiendaService {
 

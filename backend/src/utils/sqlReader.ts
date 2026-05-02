@@ -1,5 +1,9 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const queryCache = new Map<string, string>();
 
@@ -8,10 +12,10 @@ export const getSqlQuery = (fileName: string): string => {
         return queryCache.get(fileName)!;
     }
 
-    const filePath = path.join(__dirname, '..', 'sql', `${fileName}.sql`);
-    
+    const filePath = join(__dirname, '..', 'sql', `${fileName}.sql`);
+
     try {
-        const query = fs.readFileSync(filePath, { encoding: 'utf-8' });
+        const query = readFileSync(filePath, { encoding: 'utf-8' });
         queryCache.set(fileName, query);
         return query;
     } catch (error) {

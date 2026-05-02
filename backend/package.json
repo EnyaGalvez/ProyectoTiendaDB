@@ -1,0 +1,36 @@
+{
+  "name": "proyecto2-backend",
+  "version": "1.0.0",
+  "description": "Proyecto 2 de Bases de Datos - Backend API",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "node --watch --experimental-transform-types src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EnyaGalvez/ProyectoTiendaDB.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EnyaGalvez/ProyectoTiendaDB/issues"
+  },
+  "homepage": "https://github.com/EnyaGalvez/ProyectoTiendaDB#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.11.0",
+    "typescript": "^5.3.3"
+  }
+}
