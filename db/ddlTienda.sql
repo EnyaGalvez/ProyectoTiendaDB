@@ -1,5 +1,4 @@
-/*
- * Base de Datos: Tienda
+/* Base de Datos: Tienda
  * Enya Gálvez - 24693
  * PostgreSQL
  */
