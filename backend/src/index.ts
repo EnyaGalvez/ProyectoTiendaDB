@@ -2,10 +2,14 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { TiendaService } from './services/TiendaService.js';
+import { initializeDatabaseIfEmpty } from './utils/initDatabase.js';
 
 const app = express();
 const PORT = process.env['PORT'] ?? '3002';
 const tiendaService = new TiendaService();
+
+// Inicializar la base de datos si está vacía
+initializeDatabaseIfEmpty();
 
 app.use(cors({ // Middleware
     origin: process.env['FRONTEND_URL'] ?? '*',

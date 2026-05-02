@@ -21,6 +21,7 @@ RUN npm i --omit=dev
 COPY --from=builder /app/dist ./dist
 
 COPY src/sql ./dist/sql
+COPY db ./db
 
 EXPOSE 3002
 
