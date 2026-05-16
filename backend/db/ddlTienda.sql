@@ -29,7 +29,7 @@ CREATE TABLE ACTOR_COMERCIAL (
     correo_actor    VARCHAR(150),
     tel_actor       VARCHAR(20),
     dir_actor       VARCHAR(255),
-    CONSTRAINT ACTOR_COMERCIAL PRIMARY KEY (id_actor)
+    CONSTRAINT ACTOR_COMERCIAL_pk PRIMARY KEY (id_actor)
 );
 
 /* Tabla PROVEEDOR: Especialización de ACTOR_COMERCIAL.
@@ -42,7 +42,7 @@ CREATE TABLE PROVEEDOR (
     nif_proveedor VARCHAR(30) NOT NULL,
     moneda_pago VARCHAR(10) NOT NULL,
     certificacion VARCHAR(100),
-    CONSTRAINT PROVEEDOR PRIMARY KEY (id_actor),
+    CONSTRAINT PROVEEDOR_pk PRIMARY KEY (id_actor),
     CONSTRAINT PROV_ACTOR FOREIGN KEY (id_actor) REFERENCES ACTOR_COMERCIAL (id_actor)
 );
 
@@ -54,7 +54,7 @@ CREATE TABLE CLIENTE (
     id_actor INT NOT NULL,
     num_cliente VARCHAR(30) NOT NULL,
     nit_cliente VARCHAR(20) NOT NULL,
-    CONSTRAINT CLIENTE PRIMARY KEY (id_actor),
+    CONSTRAINT CLIENTE_pk PRIMARY KEY (id_actor),
     CONSTRAINT CLI_ACTOR FOREIGN KEY (id_actor) REFERENCES ACTOR_COMERCIAL (id_actor)
 );
 
@@ -68,7 +68,7 @@ CREATE TABLE EMPLEADO (
     salario_empleado NUMERIC(10, 2) NOT NULL,
     nit_empleado VARCHAR(20) NOT NULL,
     horario_empleado VARCHAR(100),
-    CONSTRAINT EMPLEADO PRIMARY KEY (id_actor),
+    CONSTRAINT EMPLEADO_pk PRIMARY KEY (id_actor),
     CONSTRAINT EMP_ACTOR FOREIGN KEY (id_actor) REFERENCES ACTOR_COMERCIAL (id_actor)
 );
 
@@ -77,7 +77,7 @@ CREATE TABLE EMPLEADO (
  */
 CREATE TABLE GERENTE (
     id_actor INT NOT NULL,
-    CONSTRAINT GERENTE PRIMARY KEY (id_actor),
+    CONSTRAINT GERENTE_pk PRIMARY KEY (id_actor),
     CONSTRAINT GER_EMP FOREIGN KEY (id_actor) REFERENCES EMPLEADO (id_actor)
 );
 
@@ -89,7 +89,7 @@ CREATE TABLE GERENTE (
 CREATE TABLE CAJERO (
     id_actor INT NOT NULL,
     id_act_gerente  INT NOT NULL,
-    CONSTRAINT CAJERO PRIMARY KEY (id_actor),
+    CONSTRAINT CAJERO_pk PRIMARY KEY (id_actor),
     CONSTRAINT CAJ_EMP FOREIGN KEY (id_actor) REFERENCES EMPLEADO (id_actor),
     CONSTRAINT CAJ_GER FOREIGN KEY (id_act_gerente) REFERENCES GERENTE (id_actor)
 );
@@ -100,7 +100,7 @@ CREATE TABLE CAJERO (
 CREATE TABLE ALMACENISTA (
     id_actor INT NOT NULL,
     id_act_gerente INT NOT NULL,
-    CONSTRAINT ALMACENISTA PRIMARY KEY (id_actor),
+    CONSTRAINT ALMACENISTA_pk PRIMARY KEY (id_actor),
     CONSTRAINT ALM_EMP FOREIGN KEY (id_actor) REFERENCES EMPLEADO (id_actor),
     CONSTRAINT ALM_GER FOREIGN KEY (id_act_gerente) REFERENCES GERENTE (id_actor)
 );
@@ -112,7 +112,7 @@ CREATE TABLE CATEGORIA (
     id_categoria SERIAL,
     nombre VARCHAR(100) NOT NULL,
     descripcion VARCHAR(255),
-    CONSTRAINT CATEGORIA PRIMARY KEY (id_categoria)
+    CONSTRAINT CATEGORIA_pk PRIMARY KEY (id_categoria)
 );
 
 /* Tabla PRODUCTO: almacena los productos disponibles en la tienda, con sus datos 
@@ -128,7 +128,7 @@ CREATE TABLE PRODUCTO (
     ubicacion_bodega VARCHAR(100),
     id_categoria INT NOT NULL,
     id_act_almacenista INT NOT NULL,
-    CONSTRAINT PRODUCTO PRIMARY KEY (id_producto),
+    CONSTRAINT PRODUCTO_pk PRIMARY KEY (id_producto),
     CONSTRAINT PROD_CAT FOREIGN KEY (id_categoria) REFERENCES CATEGORIA (id_categoria),
     CONSTRAINT PROD_ALM FOREIGN KEY (id_act_almacenista) REFERENCES ALMACENISTA (id_actor)
 );
@@ -140,7 +140,7 @@ CREATE TABLE VENTA (
     fecha_hora_venta TIMESTAMP NOT NULL,
     id_act_cliente INT NOT NULL,
     id_act_cajero INT NOT NULL,
-    CONSTRAINT VENTA PRIMARY KEY (id_venta),
+    CONSTRAINT VENTA_pk PRIMARY KEY (id_venta),
     CONSTRAINT VENTA_CLI FOREIGN KEY (id_act_cliente) REFERENCES CLIENTE (id_actor),
     CONSTRAINT VENTA_CAJ FOREIGN KEY (id_act_cajero) REFERENCES CAJERO (id_actor)
 );
@@ -151,7 +151,7 @@ CREATE TABLE FACTURA (
     id_factura SERIAL,
     estado VARCHAR(50) NOT NULL,
     id_venta INT NOT NULL,
-    CONSTRAINT FACTURA PRIMARY KEY (id_factura),
+    CONSTRAINT FACTURA_pk PRIMARY KEY (id_factura),
     CONSTRAINT FACTURA_VENTA FOREIGN KEY (id_venta) REFERENCES VENTA (id_venta)
 );
 
@@ -163,7 +163,7 @@ CREATE TABLE PRESENTE_EN (
     id_producto INT NOT NULL,
     cantidad_vendida INT NOT NULL,
     precio_unitario_venta NUMERIC(10, 2) NOT NULL,
-    CONSTRAINT PRESENTE_EN PRIMARY KEY (id_venta, id_producto),
+    CONSTRAINT PRESENTE_EN_pk PRIMARY KEY (id_venta, id_producto),
     CONSTRAINT PRESENTE_EN_VENTA FOREIGN KEY (id_venta) REFERENCES VENTA (id_venta),
     CONSTRAINT PRESENTE_EN_PROD FOREIGN KEY (id_producto) REFERENCES PRODUCTO (id_producto)
 );
@@ -176,7 +176,33 @@ CREATE TABLE PROVEE (
     id_producto INT NOT NULL,
     precio_compra_proveedor NUMERIC(10, 2) NOT NULL,
     moneda_cambio_proveedor VARCHAR(10) NOT NULL,
-    CONSTRAINT PROVEE PRIMARY KEY (id_act_proveedor, id_producto),
+    CONSTRAINT PROVEE_pk PRIMARY KEY (id_act_proveedor, id_producto),
     CONSTRAINT PROVEE_PROV FOREIGN KEY (id_act_proveedor) REFERENCES PROVEEDOR (id_actor),
     CONSTRAINT PROVEE_PROD FOREIGN KEY (id_producto) REFERENCES PRODUCTO (id_producto)
 );
+
+/*
+ * Vista para el directorio de empleados
+ */
+CREATE OR REPLACE VIEW vista_directorio_empleados AS
+SELECT 
+    e.id_actor,
+    a.nombre_actor,
+    a.apellido_actor,
+    e.puesto_empleado,
+    CASE 
+        WHEN g.id_actor IS NOT NULL THEN 'Gerente'
+        WHEN c.id_actor IS NOT NULL THEN 'Cajero'
+        WHEN alm.id_actor IS NOT NULL THEN 'Almacenista'
+        ELSE 'Empleado'
+    END AS rol_especifico,
+    COALESCE(
+        (SELECT ac.nombre_actor || ' ' || ac.apellido_actor FROM ACTOR_COMERCIAL ac WHERE ac.id_actor = c.id_act_gerente),
+        (SELECT ac.nombre_actor || ' ' || ac.apellido_actor FROM ACTOR_COMERCIAL ac WHERE ac.id_actor = alm.id_act_gerente),
+        'N/A'
+    ) AS nombre_supervisor
+FROM EMPLEADO e
+JOIN ACTOR_COMERCIAL a ON e.id_actor = a.id_actor
+LEFT JOIN GERENTE g ON e.id_actor = g.id_actor
+LEFT JOIN CAJERO c ON e.id_actor = c.id_actor
+LEFT JOIN ALMACENISTA alm ON e.id_actor = alm.id_actor;

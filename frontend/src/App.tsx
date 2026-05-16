@@ -26,7 +26,13 @@ function useFetch<T>(url: string) {
     setLoading(true); setError(null)
     try {
       const res = await fetch(url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error(`El backend devolvió HTML (probablemente el index.html de Vite/Nginx). Verifica que la URL del API (${url}) sea correcta y el backend esté corriendo.`);
+      }
+      
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
       const json = await res.json() as ApiResponse<T>
       setData(json.data); setSql(json.sql || '');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error desconocido') }

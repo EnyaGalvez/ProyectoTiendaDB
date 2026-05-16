@@ -44,7 +44,8 @@ app.get('/api/catalogo', async (_req, res) => {
 
 app.get('/api/clientes/mejores', async (req, res) => {
     try {
-        const monto = parseFloat(req.query['monto'] as string) || 1000;
+        const queryMonto = parseFloat(req.query['monto'] as string);
+        const monto = isNaN(queryMonto) ? 1000 : queryMonto;
         const result = await tiendaService.obtenerMejoresClientes(monto);
         res.json(result);
     } catch (error) {
