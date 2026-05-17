@@ -39,13 +39,18 @@
 }
 
 .header-brand h1 {
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   background: linear-gradient(90deg, var(--text-primary), var(--accent-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.header-brand h2 {
+  font-size: 1.2rem;
+  font-weight: 400;
 }
 
 .header-brand span {
@@ -470,6 +475,7 @@ tbody td {
   margin-top: 16px;
   border: 1px solid var(--border);
 }
+
 .sql-viewer-header {
   font-size: 0.75rem;
   font-weight: 600;
@@ -481,6 +487,7 @@ tbody td {
   align-items: center;
   gap: 8px;
 }
+
 .sql-viewer pre {
   margin: 0;
   color: #d4d4d4;
@@ -489,16 +496,35 @@ tbody td {
   line-height: 1.5;
   overflow-x: auto;
 }
-.sql-keyword { color: #569cd6; font-weight: bold; }
-.sql-string { color: #ce9178; }
-.sql-function { color: #dcdcaa; }
+
+.sql-keyword {
+  color: #569cd6;
+  font-weight: bold;
+}
+
+.sql-string {
+  color: #ce9178;
+}
+
+.sql-function {
+  color: #dcdcaa;
+}
+
 .cursor-blink {
   animation: blink 1s step-end infinite;
   color: var(--accent-blue);
 }
+
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
 }
 
 /* CRUD and Forms */
@@ -508,6 +534,7 @@ tbody td {
   align-items: center;
   margin-bottom: 16px;
 }
+
 .btn-primary {
   background: var(--gradient-blue);
   border: none;
@@ -518,7 +545,11 @@ tbody td {
   cursor: pointer;
   transition: opacity 0.2s;
 }
-.btn-primary:hover { opacity: 0.9; }
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
 .btn-danger {
   background: var(--gradient-red, linear-gradient(135deg, #f56565, #c53030));
   border: none;
@@ -528,6 +559,7 @@ tbody td {
   font-size: 0.75rem;
   cursor: pointer;
 }
+
 .btn-icon {
   background: transparent;
   border: 1px solid var(--border);
@@ -537,19 +569,26 @@ tbody td {
   cursor: pointer;
   margin-left: 4px;
 }
-.btn-icon:hover { background: rgba(255,255,255,0.05); }
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
 
 /* Modals */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
+
 .modal-content {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -557,46 +596,54 @@ tbody td {
   width: 100%;
   max-width: 500px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .modal-title {
   font-size: 1.1rem;
   font-weight: 600;
 }
+
 .form-group {
   margin-bottom: 16px;
 }
+
 .form-group label {
   display: block;
   font-size: 0.8rem;
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
+
 .input-field {
   width: 100%;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border);
   color: var(--text-primary);
   padding: 10px;
   border-radius: var(--radius-sm);
   font-family: inherit;
 }
+
 .input-field:focus {
   outline: none;
   border-color: var(--accent-blue);
 }
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 24px;
 }
+
 .btn-secondary {
   background: transparent;
   border: 1px solid var(--border);
@@ -612,12 +659,14 @@ tbody td {
   grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
+
 .tx-form {
   background: var(--bg-card);
   padding: 24px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
 }
+
 .tx-log-box {
   background: #0d1117;
   padding: 24px;
@@ -626,5 +675,13 @@ tbody td {
   overflow-y: auto;
   max-height: 500px;
 }
-.tx-log-success { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(104,211,145,0.1); }
-.tx-log-error { border-color: var(--accent-red); box-shadow: 0 0 15px rgba(252,129,129,0.1); }
+
+.tx-log-success {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 15px rgba(104, 211, 145, 0.1);
+}
+
+.tx-log-error {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 15px rgba(252, 129, 129, 0.1);
+}
