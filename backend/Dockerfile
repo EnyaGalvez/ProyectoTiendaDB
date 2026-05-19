@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
@@ -15,8 +15,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package.json ./
-RUN npm i --omit=dev
+COPY package*.json ./
+RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist
 

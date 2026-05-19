@@ -1,4 +1,4 @@
-import { Empleado } from '../../types';
+import type { Empleado } from '../../types';
 import { API, rolBadge, useFetch } from '../../utils';
 import { RefreshBtn, EmptyState, SqlViewer } from '../ui';
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Categoria } from '../../types';
+import type { Categoria } from '../../types';
 import { API, useFetch } from '../../utils';
 import { EmptyState, SqlViewer } from '../ui';
 

@@ -31,6 +31,30 @@ export interface Cliente {
   total_gastado: string;
 }
 
+export interface ClienteCrud {
+  id_actor?: number;
+  nombre_actor: string;
+  apellido_actor: string;
+  correo_actor: string;
+  tel_actor: string;
+  dir_actor: string;
+  num_cliente: string;
+  nit_cliente: string;
+}
+
+export interface Proveedor {
+  id_actor?: number;
+  nombre_actor: string;
+  apellido_actor: string;
+  correo_actor: string;
+  tel_actor: string;
+  dir_actor: string;
+  razon_social: string;
+  nif_proveedor: string;
+  moneda_pago: string;
+  certificacion: string;
+}
+
 export interface Categoria {
   id_categoria: number;
   nombre: string;

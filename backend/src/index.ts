@@ -146,6 +146,82 @@ app.delete('/api/productos/:id', async (req, res) => {
     }
 });
 
+// CRUD CLIENTES
+app.get('/api/clientes-crud', async (_req, res) => {
+    try {
+        const result = await tiendaService.getClientesCrud();
+        res.json(result);
+    } catch(e) {
+        console.error('[GET /api/clientes-crud]', e);
+        res.status(500).json({ error: 'Error al obtener clientes' });
+    }
+});
+app.post('/api/clientes-crud', async (req, res) => {
+    try {
+        const result = await tiendaService.createClienteCrud(req.body);
+        res.json(result);
+    } catch(e) {
+        console.error('[POST /api/clientes-crud]', e);
+        res.status(500).json({ error: 'Error al crear cliente' });
+    }
+});
+app.put('/api/clientes-crud/:id', async (req, res) => {
+    try {
+        const result = await tiendaService.updateClienteCrud(Number(req.params.id), req.body);
+        res.json(result);
+    } catch(e) {
+        console.error('[PUT /api/clientes-crud]', e);
+        res.status(500).json({ error: 'Error al actualizar cliente' });
+    }
+});
+app.delete('/api/clientes-crud/:id', async (req, res) => {
+    try {
+        const result = await tiendaService.deleteClienteCrud(Number(req.params.id));
+        res.json(result);
+    } catch(e) {
+        console.error('[DELETE /api/clientes-crud]', e);
+        res.status(500).json({ error: 'Error al borrar cliente' });
+    }
+});
+
+// CRUD PROVEEDORES
+app.get('/api/proveedores-crud', async (_req, res) => {
+    try {
+        const result = await tiendaService.getProveedoresCrud();
+        res.json(result);
+    } catch(e) {
+        console.error('[GET /api/proveedores-crud]', e);
+        res.status(500).json({ error: 'Error al obtener proveedores' });
+    }
+});
+app.post('/api/proveedores-crud', async (req, res) => {
+    try {
+        const result = await tiendaService.createProveedorCrud(req.body);
+        res.json(result);
+    } catch(e) {
+        console.error('[POST /api/proveedores-crud]', e);
+        res.status(500).json({ error: 'Error al crear proveedor' });
+    }
+});
+app.put('/api/proveedores-crud/:id', async (req, res) => {
+    try {
+        const result = await tiendaService.updateProveedorCrud(Number(req.params.id), req.body);
+        res.json(result);
+    } catch(e) {
+        console.error('[PUT /api/proveedores-crud]', e);
+        res.status(500).json({ error: 'Error al actualizar proveedor' });
+    }
+});
+app.delete('/api/proveedores-crud/:id', async (req, res) => {
+    try {
+        const result = await tiendaService.deleteProveedorCrud(Number(req.params.id));
+        res.json(result);
+    } catch(e) {
+        console.error('[DELETE /api/proveedores-crud]', e);
+        res.status(500).json({ error: 'Error al borrar proveedor' });
+    }
+});
+
 // TRANSACCION CAJERO
 app.post('/api/transaccion/cajero', async (req, res) => {
     try {

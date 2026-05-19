@@ -1,4 +1,4 @@
-import { Producto } from '../../types';
+import type { Producto } from '../../types';
 import { API, stockColor, fmtCurrency, useFetch } from '../../utils';
 import { RefreshBtn, EmptyState, SqlViewer } from '../ui';
 

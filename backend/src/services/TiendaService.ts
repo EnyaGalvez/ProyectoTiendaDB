@@ -27,7 +27,7 @@ export class TiendaService {
         const result = await pool.query(sql);
         return { data: result.rows, sql };
     }
-    
+
     async createCategoria(nombre: string, descripcion: string) {
         const sql = `INSERT INTO CATEGORIA (nombre, descripcion) VALUES ($1, $2) RETURNING *;`;
         const result = await pool.query(sql, [nombre, descripcion]);
@@ -77,7 +77,7 @@ export class TiendaService {
     async registrarCajeroTransaccion(actor: any, emp: any, cajero: any) {
         const client = await pool.connect();
         const logs: string[] = [];
-        
+
         try {
             logs.push('BEGIN;');
             await client.query('BEGIN');
@@ -112,9 +112,9 @@ export class TiendaService {
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
-            
+
             const resVenta = await client.query(
-                `INSERT INTO VENTA (fecha_hora_venta, id_act_cliente, id_act_cajero) VALUES (NOW(), $1, $2) RETURNING id_venta;`, 
+                `INSERT INTO VENTA (fecha_hora_venta, id_act_cliente, id_act_cajero) VALUES (NOW(), $1, $2) RETURNING id_venta;`,
                 [idCliente, idCajero]
             );
             const idVenta = resVenta.rows[0].id_venta;
@@ -123,15 +123,15 @@ export class TiendaService {
 
             for (const item of productos) {
                 await client.query(
-                    `INSERT INTO PRESENTE_EN (id_venta, id_producto, cantidad_vendida, precio_unitario_venta) VALUES ($1, $2, $3, $4);`, 
+                    `INSERT INTO PRESENTE_EN (id_venta, id_producto, cantidad_vendida, precio_unitario_venta) VALUES ($1, $2, $3, $4);`,
                     [idVenta, item.idProducto, item.cantidad, item.precioUnitario]
                 );
 
                 const resStock = await client.query(
-                    `UPDATE PRODUCTO SET stock = stock - $1 WHERE id_producto = $2 AND stock >= $1;`, 
+                    `UPDATE PRODUCTO SET stock = stock - $1 WHERE id_producto = $2 AND stock >= $1;`,
                     [item.cantidad, item.idProducto]
                 );
-                
+
                 if (resStock.rowCount === 0) {
                     throw new Error(`Stock insuficiente para el producto ID: ${item.idProducto}`);
                 }
@@ -141,7 +141,217 @@ export class TiendaService {
             return { exito: true, idVenta };
         } catch (error) {
             await client.query('ROLLBACK');
-            throw error; 
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    // CRUD Clientes (Transaccional)
+    async getClientesCrud() {
+        const sql = `SELECT 
+            c.id_actor, 
+            c.num_cliente, 
+            c.nit_cliente, 
+            ac.nombre_actor, 
+            ac.apellido_actor, 
+            ac.correo_actor, 
+            ac.tel_actor, 
+            ac.dir_actor
+        FROM CLIENTE c
+        JOIN ACTOR_COMERCIAL ac ON c.id_actor = ac.id_actor
+        ORDER BY c.id_actor ASC;`;
+        const result = await pool.query(sql);
+        return { data: result.rows, sql };
+    }
+
+    async createClienteCrud(cliente: any) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlActor = `INSERT INTO ACTOR_COMERCIAL (nombre_actor, apellido_actor, correo_actor, tel_actor, dir_actor) VALUES ($1, $2, $3, $4, $5) RETURNING id_actor;`;
+            queriesExecuted.push(sqlActor);
+            const resActor = await client.query(sqlActor, [cliente.nombre_actor, cliente.apellido_actor, cliente.correo_actor, cliente.tel_actor, cliente.dir_actor]);
+            const idActor = resActor.rows[0].id_actor;
+
+            const sqlCliente = `INSERT INTO CLIENTE (id_actor, num_cliente, nit_cliente) VALUES ($1, $2, $3) RETURNING *;`;
+            queriesExecuted.push(sqlCliente);
+            await client.query(sqlCliente, [idActor, cliente.num_cliente, cliente.nit_cliente]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: { id_actor: idActor, ...cliente },
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    async updateClienteCrud(id: number, cliente: any) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlActor = `UPDATE ACTOR_COMERCIAL SET nombre_actor = $1, apellido_actor = $2, correo_actor = $3, tel_actor = $4, dir_actor = $5 WHERE id_actor = $6;`;
+            queriesExecuted.push(sqlActor);
+            await client.query(sqlActor, [cliente.nombre_actor, cliente.apellido_actor, cliente.correo_actor, cliente.tel_actor, cliente.dir_actor, id]);
+
+            const sqlCliente = `UPDATE CLIENTE SET num_cliente = $1, nit_cliente = $2 WHERE id_actor = $3 RETURNING *;`;
+            queriesExecuted.push(sqlCliente);
+            await client.query(sqlCliente, [cliente.num_cliente, cliente.nit_cliente, id]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: { id_actor: id, ...cliente },
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    async deleteClienteCrud(id: number) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlCliente = `DELETE FROM CLIENTE WHERE id_actor = $1;`;
+            queriesExecuted.push(sqlCliente);
+            await client.query(sqlCliente, [id]);
+
+            const sqlActor = `DELETE FROM ACTOR_COMERCIAL WHERE id_actor = $1 RETURNING *;`;
+            queriesExecuted.push(sqlActor);
+            const result = await client.query(sqlActor, [id]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: result.rows[0],
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    // CRUD Proveedores (Transaccional)
+    async getProveedoresCrud() {
+        const sql = `SELECT p.id_actor, p.razon_social, p.nif_proveedor, p.moneda_pago, p.certificacion, ac.nombre_actor, ac.apellido_actor, ac.correo_actor, ac.tel_actor, ac.dir_actor
+FROM PROVEEDOR p
+JOIN ACTOR_COMERCIAL ac ON p.id_actor = ac.id_actor
+ORDER BY p.id_actor ASC;`;
+        const result = await pool.query(sql);
+        return { data: result.rows, sql };
+    }
+
+    async createProveedorCrud(prov: any) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlActor = `INSERT INTO ACTOR_COMERCIAL (nombre_actor, apellido_actor, correo_actor, tel_actor, dir_actor) VALUES ($1, $2, $3, $4, $5) RETURNING id_actor;`;
+            queriesExecuted.push(sqlActor);
+            const resActor = await client.query(sqlActor, [prov.nombre_actor, prov.apellido_actor, prov.correo_actor, prov.tel_actor, prov.dir_actor]);
+            const idActor = resActor.rows[0].id_actor;
+
+            const sqlProv = `INSERT INTO PROVEEDOR (id_actor, razon_social, nif_proveedor, moneda_pago, certificacion) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
+            queriesExecuted.push(sqlProv);
+            await client.query(sqlProv, [idActor, prov.razon_social, prov.nif_proveedor, prov.moneda_pago, prov.certificacion]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: { id_actor: idActor, ...prov },
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    async updateProveedorCrud(id: number, prov: any) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlActor = `UPDATE ACTOR_COMERCIAL SET nombre_actor = $1, apellido_actor = $2, correo_actor = $3, tel_actor = $4, dir_actor = $5 WHERE id_actor = $6;`;
+            queriesExecuted.push(sqlActor);
+            await client.query(sqlActor, [prov.nombre_actor, prov.apellido_actor, prov.correo_actor, prov.tel_actor, prov.dir_actor, id]);
+
+            const sqlProv = `UPDATE PROVEEDOR SET razon_social = $1, nif_proveedor = $2, moneda_pago = $3, certificacion = $4 WHERE id_actor = $5 RETURNING *;`;
+            queriesExecuted.push(sqlProv);
+            await client.query(sqlProv, [prov.razon_social, prov.nif_proveedor, prov.moneda_pago, prov.certificacion, id]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: { id_actor: id, ...prov },
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    async deleteProveedorCrud(id: number) {
+        const client = await pool.connect();
+        const queriesExecuted: string[] = [];
+        try {
+            await client.query('BEGIN');
+            queriesExecuted.push('BEGIN;');
+
+            const sqlProv = `DELETE FROM PROVEEDOR WHERE id_actor = $1;`;
+            queriesExecuted.push(sqlProv);
+            await client.query(sqlProv, [id]);
+
+            const sqlActor = `DELETE FROM ACTOR_COMERCIAL WHERE id_actor = $1 RETURNING *;`;
+            queriesExecuted.push(sqlActor);
+            const result = await client.query(sqlActor, [id]);
+
+            await client.query('COMMIT');
+            queriesExecuted.push('COMMIT;');
+
+            return {
+                data: result.rows[0],
+                sql: queriesExecuted.join('\n\n')
+            };
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
         } finally {
             client.release();
         }
