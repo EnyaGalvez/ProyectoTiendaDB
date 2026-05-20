@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { TiendaService } from './services/TiendaService.js';
 import { initializeDatabaseIfEmpty } from './utils/initDatabase.js';
+import { prisma } from './prisma.js';
 
 const app = express();
 const PORT = process.env['PORT'] ?? '3002';
@@ -19,6 +20,17 @@ app.use(express.json());
 
 app.get('/api/health', (_req, res) => { // Health Check
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/prisma-health', async (_req, res) => {
+    try {
+        // Hacemos un count simple en la tabla producto usando Prisma
+        const productCount = await prisma.producto.count();
+        res.json({ status: 'ok', prisma: 'connected', productCount, timestamp: new Date().toISOString() });
+    } catch (error) {
+        console.error('[GET /api/prisma-health]', error);
+        res.status(500).json({ error: 'Error conectando a Prisma.' });
+    }
 });
 
 // Rutas de la Tienda

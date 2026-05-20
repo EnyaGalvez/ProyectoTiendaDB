@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model actor_comercial {
+  id_actor       Int        @id(map: "actor_comercial_pk") @default(autoincrement())
+  nombre_actor   String     @db.VarChar(100)
+  apellido_actor String     @db.VarChar(100)
+  correo_actor   String?    @db.VarChar(150)
+  tel_actor      String?    @db.VarChar(20)
+  dir_actor      String?    @db.VarChar(255)
+  cliente        cliente?
+  empleado       empleado?
+  proveedor      proveedor?
+}
+
+model almacenista {
+  id_actor       Int        @id(map: "almacenista_pk")
+  id_act_gerente Int
+  empleado       empleado   @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "alm_emp")
+  gerente        gerente    @relation(fields: [id_act_gerente], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "alm_ger")
+  producto       producto[]
+}
+
+model cajero {
+  id_actor       Int      @id(map: "cajero_pk")
+  id_act_gerente Int
+  empleado       empleado @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "caj_emp")
+  gerente        gerente  @relation(fields: [id_act_gerente], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "caj_ger")
+  venta          venta[]
+}
+
+model categoria {
+  id_categoria Int        @id(map: "categoria_pk") @default(autoincrement())
+  nombre       String     @db.VarChar(100)
+  descripcion  String?    @db.VarChar(255)
+  producto     producto[]
+}
+
+model cliente {
+  id_actor        Int             @id(map: "cliente_pk")
+  num_cliente     String          @db.VarChar(30)
+  nit_cliente     String          @db.VarChar(20)
+  actor_comercial actor_comercial @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "cli_actor")
+  venta           venta[]
+}
+
+model empleado {
+  id_actor         Int             @id(map: "empleado_pk")
+  num_empleado     String          @db.VarChar(30)
+  puesto_empleado  String          @db.VarChar(100)
+  salario_empleado Decimal         @db.Decimal(10, 2)
+  nit_empleado     String          @db.VarChar(20)
+  horario_empleado String?         @db.VarChar(100)
+  almacenista      almacenista?
+  cajero           cajero?
+  actor_comercial  actor_comercial @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "emp_actor")
+  gerente          gerente?
+}
+
+model factura {
+  id_factura Int    @id(map: "factura_pk") @default(autoincrement())
+  estado     String @db.VarChar(50)
+  id_venta   Int
+  venta      venta  @relation(fields: [id_venta], references: [id_venta], onDelete: NoAction, onUpdate: NoAction, map: "factura_venta")
+}
+
+model gerente {
+  id_actor    Int           @id(map: "gerente_pk")
+  almacenista almacenista[]
+  cajero      cajero[]
+  empleado    empleado      @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "ger_emp")
+}
+
+model presente_en {
+  id_venta              Int
+  id_producto           Int
+  cantidad_vendida      Int
+  precio_unitario_venta Decimal  @db.Decimal(10, 2)
+  producto              producto @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "presente_en_prod")
+  venta                 venta    @relation(fields: [id_venta], references: [id_venta], onDelete: NoAction, onUpdate: NoAction, map: "presente_en_venta")
+
+  @@id([id_venta, id_producto], map: "presente_en_pk")
+}
+
+model producto {
+  id_producto        Int           @id(map: "producto_pk") @default(autoincrement())
+  nombre_prod        String        @db.VarChar(150)
+  descripcion_prod   String?       @db.VarChar(255)
+  precio_prod        Decimal       @db.Decimal(10, 2)
+  precio_compra_base Decimal       @db.Decimal(10, 2)
+  stock              Int
+  ubicacion_bodega   String?       @db.VarChar(100)
+  id_categoria       Int
+  id_act_almacenista Int
+  presente_en        presente_en[]
+  almacenista        almacenista   @relation(fields: [id_act_almacenista], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "prod_alm")
+  categoria          categoria     @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction, map: "prod_cat")
+  provee             provee[]
+}
+
+model provee {
+  id_act_proveedor        Int
+  id_producto             Int
+  precio_compra_proveedor Decimal   @db.Decimal(10, 2)
+  moneda_cambio_proveedor String    @db.VarChar(10)
+  producto                producto  @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction, map: "provee_prod")
+  proveedor               proveedor @relation(fields: [id_act_proveedor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "provee_prov")
+
+  @@id([id_act_proveedor, id_producto], map: "provee_pk")
+}
+
+model proveedor {
+  id_actor        Int             @id(map: "proveedor_pk")
+  razon_social    String          @db.VarChar(200)
+  nif_proveedor   String          @db.VarChar(30)
+  moneda_pago     String          @db.VarChar(10)
+  certificacion   String?         @db.VarChar(100)
+  provee          provee[]
+  actor_comercial actor_comercial @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "prov_actor")
+}
+
+model venta {
+  id_venta         Int           @id(map: "venta_pk") @default(autoincrement())
+  fecha_hora_venta DateTime      @db.Timestamp(6)
+  id_act_cliente   Int
+  id_act_cajero    Int
+  factura          factura[]
+  presente_en      presente_en[]
+  cajero           cajero        @relation(fields: [id_act_cajero], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "venta_caj")
+  cliente          cliente       @relation(fields: [id_act_cliente], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "venta_cli")
+}
