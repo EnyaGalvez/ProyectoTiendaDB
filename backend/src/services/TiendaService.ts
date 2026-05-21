@@ -1,359 +1,419 @@
-import { pool } from '../config/database.js';
+import { prisma } from '../prisma.js';
 import { getSqlQuery } from '../utils/sqlReader.js';
 
 export class TiendaService {
 
     async obtenerDirectorioEmpleados() {
         const query = getSqlQuery('directorioEmpleados');
-        const result = await pool.query(query);
-        return { data: result.rows, sql: query };
+        const result: any = await prisma.$queryRawUnsafe(query);
+        return { data: result, sql: `prisma.$queryRawUnsafe(getSqlQuery('directorioEmpleados'))` };
     }
 
     async obtenerMejoresClientes(montoMinimo: number = 1000) {
         const query = getSqlQuery('mejoresClientes');
-        const result = await pool.query(query, [montoMinimo]);
-        return { data: result.rows, sql: query };
+        const result: any = await prisma.$queryRawUnsafe(query, montoMinimo);
+        return { data: result, sql: `prisma.$queryRawUnsafe(getSqlQuery('mejoresClientes'), ${montoMinimo})` };
     }
 
     async obtenerCatalogoDetallado() {
         const query = getSqlQuery('catalogoDetallado');
-        const result = await pool.query(query);
-        return { data: result.rows, sql: query };
+        const result: any = await prisma.$queryRawUnsafe(query);
+        return { data: result, sql: `prisma.$queryRawUnsafe(getSqlQuery('catalogoDetallado'))` };
     }
 
     // CRUD Categoria
     async getCategorias() {
-        const sql = `SELECT * FROM CATEGORIA ORDER BY id_categoria ASC;`;
-        const result = await pool.query(sql);
-        return { data: result.rows, sql };
+        const categorias = await prisma.categoria.findMany({
+            orderBy: { id_categoria: 'asc' }
+        });
+        const sql = `prisma.categoria.findMany({ orderBy: { id_categoria: 'asc' } })`;
+        return { data: categorias, sql };
     }
 
     async createCategoria(nombre: string, descripcion: string) {
-        const sql = `INSERT INTO CATEGORIA (nombre, descripcion) VALUES ($1, $2) RETURNING *;`;
-        const result = await pool.query(sql, [nombre, descripcion]);
-        return { data: result.rows[0], sql };
+        const categoria = await prisma.categoria.create({
+            data: { nombre, descripcion }
+        });
+        const sql = `prisma.categoria.create({ data: { nombre: '${nombre}', descripcion: '${descripcion}' } })`;
+        return { data: categoria, sql };
     }
 
     async updateCategoria(id: number, nombre: string, descripcion: string) {
-        const sql = `UPDATE CATEGORIA SET nombre = $1, descripcion = $2 WHERE id_categoria = $3 RETURNING *;`;
-        const result = await pool.query(sql, [nombre, descripcion, id]);
-        return { data: result.rows[0], sql };
+        const categoria = await prisma.categoria.update({
+            where: { id_categoria: id },
+            data: { nombre, descripcion }
+        });
+        const sql = `prisma.categoria.update({ where: { id_categoria: ${id} }, data: { nombre: '${nombre}', ... } })`;
+        return { data: categoria, sql };
     }
 
     async deleteCategoria(id: number) {
-        const sql = `DELETE FROM CATEGORIA WHERE id_categoria = $1 RETURNING *;`;
-        const result = await pool.query(sql, [id]);
-        return { data: result.rows[0], sql };
+        const categoria = await prisma.categoria.delete({
+            where: { id_categoria: id }
+        });
+        const sql = `prisma.categoria.delete({ where: { id_categoria: ${id} } })`;
+        return { data: categoria, sql };
     }
 
     // CRUD Producto
     async getProductos() {
-        const sql = `SELECT * FROM PRODUCTO ORDER BY id_producto ASC;`;
-        const result = await pool.query(sql);
-        return { data: result.rows, sql };
+        const productos = await prisma.producto.findMany({
+            orderBy: { id_producto: 'asc' }
+        });
+        const sql = `prisma.producto.findMany({ orderBy: { id_producto: 'asc' } })`;
+        return { data: productos, sql };
     }
 
     async createProducto(prod: any) {
-        const sql = `INSERT INTO PRODUCTO (nombre_prod, descripcion_prod, precio_prod, precio_compra_base, stock, ubicacion_bodega, id_categoria, id_act_almacenista) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`;
-        const params = [prod.nombre_prod, prod.descripcion_prod, prod.precio_prod, prod.precio_compra_base, prod.stock, prod.ubicacion_bodega, prod.id_categoria, prod.id_act_almacenista];
-        const result = await pool.query(sql, params);
-        return { data: result.rows[0], sql };
+        const producto = await prisma.producto.create({
+            data: {
+                nombre_prod: prod.nombre_prod,
+                descripcion_prod: prod.descripcion_prod,
+                precio_prod: prod.precio_prod,
+                precio_compra_base: prod.precio_compra_base,
+                stock: prod.stock,
+                ubicacion_bodega: prod.ubicacion_bodega,
+                id_categoria: prod.id_categoria,
+                id_act_almacenista: prod.id_act_almacenista
+            }
+        });
+        const sql = `prisma.producto.create({ data: { nombre_prod: '${prod.nombre_prod}', ... } })`;
+        return { data: producto, sql };
     }
 
     async updateProducto(id: number, prod: any) {
-        const sql = `UPDATE PRODUCTO SET nombre_prod=$1, descripcion_prod=$2, precio_prod=$3, precio_compra_base=$4, stock=$5, ubicacion_bodega=$6, id_categoria=$7, id_act_almacenista=$8 WHERE id_producto=$9 RETURNING *;`;
-        const params = [prod.nombre_prod, prod.descripcion_prod, prod.precio_prod, prod.precio_compra_base, prod.stock, prod.ubicacion_bodega, prod.id_categoria, prod.id_act_almacenista, id];
-        const result = await pool.query(sql, params);
-        return { data: result.rows[0], sql };
+        const producto = await prisma.producto.update({
+            where: { id_producto: id },
+            data: {
+                nombre_prod: prod.nombre_prod,
+                descripcion_prod: prod.descripcion_prod,
+                precio_prod: prod.precio_prod,
+                precio_compra_base: prod.precio_compra_base,
+                stock: prod.stock,
+                ubicacion_bodega: prod.ubicacion_bodega,
+                id_categoria: prod.id_categoria,
+                id_act_almacenista: prod.id_act_almacenista
+            }
+        });
+        const sql = `prisma.producto.update({ where: { id_producto: ${id} }, data: { ... } })`;
+        return { data: producto, sql };
     }
 
     async deleteProducto(id: number) {
-        const sql = `DELETE FROM PRODUCTO WHERE id_producto = $1 RETURNING *;`;
-        const result = await pool.query(sql, [id]);
-        return { data: result.rows[0], sql };
+        const producto = await prisma.producto.delete({
+            where: { id_producto: id }
+        });
+        const sql = `prisma.producto.delete({ where: { id_producto: ${id} } })`;
+        return { data: producto, sql };
     }
 
     // Transacción Explícita (Registro de Cajero)
     async registrarCajeroTransaccion(actor: any, emp: any, cajero: any) {
-        const client = await pool.connect();
         const logs: string[] = [];
-
         try {
-            logs.push('BEGIN;');
-            await client.query('BEGIN');
-
-            const sqlActor = `INSERT INTO ACTOR_COMERCIAL (nombre_actor, apellido_actor, correo_actor, tel_actor, dir_actor) VALUES ($1, $2, $3, $4, $5) RETURNING id_actor;`;
-            logs.push(`-- Insertar Actor Comercial\n` + sqlActor.replace('$1', `'${actor.nombre_actor}'`));
-            const resActor = await client.query(sqlActor, [actor.nombre_actor, actor.apellido_actor, actor.correo_actor, actor.tel_actor, actor.dir_actor]);
-            const idActor = resActor.rows[0].id_actor;
-
-            const sqlEmp = `INSERT INTO EMPLEADO (id_actor, num_empleado, puesto_empleado, salario_empleado, nit_empleado, horario_empleado) VALUES ($1, $2, $3, $4, $5, $6);`;
-            logs.push(`-- Insertar Empleado\n` + sqlEmp.replace('$1', idActor));
-            await client.query(sqlEmp, [idActor, emp.num_empleado, emp.puesto_empleado, emp.salario_empleado, emp.nit_empleado, emp.horario_empleado]);
-
-            const sqlCajero = `INSERT INTO CAJERO (id_actor, id_act_gerente) VALUES ($1, $2);`;
-            logs.push(`-- Insertar Cajero\n` + sqlCajero.replace('$1', idActor).replace('$2', cajero.id_act_gerente));
-            await client.query(sqlCajero, [idActor, cajero.id_act_gerente]);
-
-            logs.push('COMMIT;');
-            await client.query('COMMIT');
-            return { exito: true, logs: logs.join('\n\n'), id_actor: idActor };
+            logs.push('// Iniciando Transacción Prisma');
+            
+            const result = await prisma.$transaction(async (tx) => {
+                logs.push(`prisma.actor_comercial.create({ data: { nombre_actor: '${actor.nombre_actor}', ... } })`);
+                const newActor = await tx.actor_comercial.create({
+                    data: {
+                        nombre_actor: actor.nombre_actor,
+                        apellido_actor: actor.apellido_actor,
+                        correo_actor: actor.correo_actor,
+                        tel_actor: actor.tel_actor,
+                        dir_actor: actor.dir_actor,
+                        empleado: {
+                            create: {
+                                num_empleado: emp.num_empleado,
+                                puesto_empleado: emp.puesto_empleado,
+                                salario_empleado: emp.salario_empleado,
+                                nit_empleado: emp.nit_empleado,
+                                horario_empleado: emp.horario_empleado,
+                                cajero: {
+                                    create: {
+                                        id_act_gerente: cajero.id_act_gerente
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                return newActor.id_actor;
+            });
+            
+            logs.push('// Transacción Prisma Exitosa');
+            return { exito: true, logs: logs.join('\n\n'), id_actor: result };
         } catch (error) {
-            logs.push('-- ERROR DETECTADO, EJECUTANDO ROLLBACK: ' + (error instanceof Error ? error.message : String(error)));
-            logs.push('ROLLBACK;');
-            await client.query('ROLLBACK');
+            logs.push('// ERROR DETECTADO, ROLLBACK AUTOMÁTICO DE PRISMA: ' + (error instanceof Error ? error.message : String(error)));
             throw { exito: false, logs: logs.join('\n\n'), error: error instanceof Error ? error.message : 'Error desconocido' };
-        } finally {
-            client.release();
         }
     }
 
     async procesarTransaccionVenta(idCliente: number, idCajero: number, productos: any[]) {
-        const client = await pool.connect();
         try {
-            await client.query('BEGIN');
+            const result = await prisma.$transaction(async (tx) => {
+                const newVenta = await tx.venta.create({
+                    data: {
+                        fecha_hora_venta: new Date(),
+                        id_act_cliente: idCliente,
+                        id_act_cajero: idCajero,
+                        factura: {
+                            create: {
+                                estado: 'Pagada'
+                            }
+                        }
+                    }
+                });
 
-            const resVenta = await client.query(
-                `INSERT INTO VENTA (fecha_hora_venta, id_act_cliente, id_act_cajero) VALUES (NOW(), $1, $2) RETURNING id_venta;`,
-                [idCliente, idCajero]
-            );
-            const idVenta = resVenta.rows[0].id_venta;
+                for (const item of productos) {
+                    await tx.presente_en.create({
+                        data: {
+                            id_venta: newVenta.id_venta,
+                            id_producto: item.idProducto,
+                            cantidad_vendida: item.cantidad,
+                            precio_unitario_venta: item.precioUnitario
+                        }
+                    });
 
-            await client.query(`INSERT INTO FACTURA (estado, id_venta) VALUES ('Pagada', $1);`, [idVenta]);
+                    const resStock = await tx.producto.updateMany({
+                        where: {
+                            id_producto: item.idProducto,
+                            stock: { gte: item.cantidad }
+                        },
+                        data: {
+                            stock: { decrement: item.cantidad }
+                        }
+                    });
 
-            for (const item of productos) {
-                await client.query(
-                    `INSERT INTO PRESENTE_EN (id_venta, id_producto, cantidad_vendida, precio_unitario_venta) VALUES ($1, $2, $3, $4);`,
-                    [idVenta, item.idProducto, item.cantidad, item.precioUnitario]
-                );
-
-                const resStock = await client.query(
-                    `UPDATE PRODUCTO SET stock = stock - $1 WHERE id_producto = $2 AND stock >= $1;`,
-                    [item.cantidad, item.idProducto]
-                );
-
-                if (resStock.rowCount === 0) {
-                    throw new Error(`Stock insuficiente para el producto ID: ${item.idProducto}`);
+                    if (resStock.count === 0) {
+                        throw new Error(`Stock insuficiente para el producto ID: ${item.idProducto}`);
+                    }
                 }
-            }
+                
+                return newVenta.id_venta;
+            });
 
-            await client.query('COMMIT');
-            return { exito: true, idVenta };
+            return { exito: true, idVenta: result };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     // CRUD Clientes (Transaccional)
     async getClientesCrud() {
-        const sql = `SELECT 
-            c.id_actor, 
-            c.num_cliente, 
-            c.nit_cliente, 
-            ac.nombre_actor, 
-            ac.apellido_actor, 
-            ac.correo_actor, 
-            ac.tel_actor, 
-            ac.dir_actor
-        FROM CLIENTE c
-        JOIN ACTOR_COMERCIAL ac ON c.id_actor = ac.id_actor
-        ORDER BY c.id_actor ASC;`;
-        const result = await pool.query(sql);
-        return { data: result.rows, sql };
+        const clientes = await prisma.cliente.findMany({
+            include: { actor_comercial: true },
+            orderBy: { id_actor: 'asc' }
+        });
+        
+        const data = clientes.map(c => ({
+            id_actor: c.id_actor,
+            num_cliente: c.num_cliente,
+            nit_cliente: c.nit_cliente,
+            nombre_actor: c.actor_comercial.nombre_actor,
+            apellido_actor: c.actor_comercial.apellido_actor,
+            correo_actor: c.actor_comercial.correo_actor,
+            tel_actor: c.actor_comercial.tel_actor,
+            dir_actor: c.actor_comercial.dir_actor
+        }));
+
+        const sql = `prisma.cliente.findMany({ include: { actor_comercial: true }, orderBy: { id_actor: 'asc' } })`;
+        return { data, sql };
     }
 
     async createClienteCrud(cliente: any) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Usando Creación Anidada de Prisma'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
-
-            const sqlActor = `INSERT INTO ACTOR_COMERCIAL (nombre_actor, apellido_actor, correo_actor, tel_actor, dir_actor) VALUES ($1, $2, $3, $4, $5) RETURNING id_actor;`;
-            queriesExecuted.push(sqlActor);
-            const resActor = await client.query(sqlActor, [cliente.nombre_actor, cliente.apellido_actor, cliente.correo_actor, cliente.tel_actor, cliente.dir_actor]);
-            const idActor = resActor.rows[0].id_actor;
-
-            const sqlCliente = `INSERT INTO CLIENTE (id_actor, num_cliente, nit_cliente) VALUES ($1, $2, $3) RETURNING *;`;
-            queriesExecuted.push(sqlCliente);
-            await client.query(sqlCliente, [idActor, cliente.num_cliente, cliente.nit_cliente]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            const sqlPrisma = `prisma.actor_comercial.create({ data: { nombre_actor, ... , cliente: { create: { num_cliente, nit_cliente } } } })`;
+            queriesExecuted.push(sqlPrisma);
+            
+            const newActor = await prisma.actor_comercial.create({
+                data: {
+                    nombre_actor: cliente.nombre_actor,
+                    apellido_actor: cliente.apellido_actor,
+                    correo_actor: cliente.correo_actor,
+                    tel_actor: cliente.tel_actor,
+                    dir_actor: cliente.dir_actor,
+                    cliente: {
+                        create: {
+                            num_cliente: cliente.num_cliente,
+                            nit_cliente: cliente.nit_cliente
+                        }
+                    }
+                },
+                include: { cliente: true }
+            });
 
             return {
-                data: { id_actor: idActor, ...cliente },
+                data: { id_actor: newActor.id_actor, ...cliente },
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     async updateClienteCrud(id: number, cliente: any) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Actualizando Cliente y su Actor Comercial asociado'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
+            const sqlPrisma = `prisma.cliente.update({ where: { id_actor: ${id} }, data: { num_cliente, nit_cliente, actor_comercial: { update: { ... } } } })`;
+            queriesExecuted.push(sqlPrisma);
 
-            const sqlActor = `UPDATE ACTOR_COMERCIAL SET nombre_actor = $1, apellido_actor = $2, correo_actor = $3, tel_actor = $4, dir_actor = $5 WHERE id_actor = $6;`;
-            queriesExecuted.push(sqlActor);
-            await client.query(sqlActor, [cliente.nombre_actor, cliente.apellido_actor, cliente.correo_actor, cliente.tel_actor, cliente.dir_actor, id]);
-
-            const sqlCliente = `UPDATE CLIENTE SET num_cliente = $1, nit_cliente = $2 WHERE id_actor = $3 RETURNING *;`;
-            queriesExecuted.push(sqlCliente);
-            await client.query(sqlCliente, [cliente.num_cliente, cliente.nit_cliente, id]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            await prisma.cliente.update({
+                where: { id_actor: id },
+                data: {
+                    num_cliente: cliente.num_cliente,
+                    nit_cliente: cliente.nit_cliente,
+                    actor_comercial: {
+                        update: {
+                            nombre_actor: cliente.nombre_actor,
+                            apellido_actor: cliente.apellido_actor,
+                            correo_actor: cliente.correo_actor,
+                            tel_actor: cliente.tel_actor,
+                            dir_actor: cliente.dir_actor
+                        }
+                    }
+                }
+            });
 
             return {
                 data: { id_actor: id, ...cliente },
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     async deleteClienteCrud(id: number) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Eliminando Cliente y Actor Comercial (Transaccional)'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
+            const sqlPrisma = `prisma.$transaction([ prisma.cliente.delete({ where: { id_actor: ${id} } }), prisma.actor_comercial.delete({ where: { id_actor: ${id} } }) ])`;
+            queriesExecuted.push(sqlPrisma);
 
-            const sqlCliente = `DELETE FROM CLIENTE WHERE id_actor = $1;`;
-            queriesExecuted.push(sqlCliente);
-            await client.query(sqlCliente, [id]);
-
-            const sqlActor = `DELETE FROM ACTOR_COMERCIAL WHERE id_actor = $1 RETURNING *;`;
-            queriesExecuted.push(sqlActor);
-            const result = await client.query(sqlActor, [id]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            const [, actorResult] = await prisma.$transaction([
+                prisma.cliente.delete({ where: { id_actor: id } }),
+                prisma.actor_comercial.delete({ where: { id_actor: id } })
+            ]);
 
             return {
-                data: result.rows[0],
+                data: actorResult,
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     // CRUD Proveedores (Transaccional)
     async getProveedoresCrud() {
-        const sql = `SELECT p.id_actor, p.razon_social, p.nif_proveedor, p.moneda_pago, p.certificacion, ac.nombre_actor, ac.apellido_actor, ac.correo_actor, ac.tel_actor, ac.dir_actor
-FROM PROVEEDOR p
-JOIN ACTOR_COMERCIAL ac ON p.id_actor = ac.id_actor
-ORDER BY p.id_actor ASC;`;
-        const result = await pool.query(sql);
-        return { data: result.rows, sql };
+        const proveedores = await prisma.proveedor.findMany({
+            include: { actor_comercial: true },
+            orderBy: { id_actor: 'asc' }
+        });
+        
+        const data = proveedores.map(p => ({
+            id_actor: p.id_actor,
+            razon_social: p.razon_social,
+            nif_proveedor: p.nif_proveedor,
+            moneda_pago: p.moneda_pago,
+            certificacion: p.certificacion,
+            nombre_actor: p.actor_comercial.nombre_actor,
+            apellido_actor: p.actor_comercial.apellido_actor,
+            correo_actor: p.actor_comercial.correo_actor,
+            tel_actor: p.actor_comercial.tel_actor,
+            dir_actor: p.actor_comercial.dir_actor
+        }));
+
+        const sql = `prisma.proveedor.findMany({ include: { actor_comercial: true }, orderBy: { id_actor: 'asc' } })`;
+        return { data, sql };
     }
 
     async createProveedorCrud(prov: any) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Usando Creación Anidada de Prisma'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
-
-            const sqlActor = `INSERT INTO ACTOR_COMERCIAL (nombre_actor, apellido_actor, correo_actor, tel_actor, dir_actor) VALUES ($1, $2, $3, $4, $5) RETURNING id_actor;`;
-            queriesExecuted.push(sqlActor);
-            const resActor = await client.query(sqlActor, [prov.nombre_actor, prov.apellido_actor, prov.correo_actor, prov.tel_actor, prov.dir_actor]);
-            const idActor = resActor.rows[0].id_actor;
-
-            const sqlProv = `INSERT INTO PROVEEDOR (id_actor, razon_social, nif_proveedor, moneda_pago, certificacion) VALUES ($1, $2, $3, $4, $5) RETURNING *;`;
-            queriesExecuted.push(sqlProv);
-            await client.query(sqlProv, [idActor, prov.razon_social, prov.nif_proveedor, prov.moneda_pago, prov.certificacion]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            const sqlPrisma = `prisma.actor_comercial.create({ data: { nombre_actor, ... , proveedor: { create: { razon_social, nif_proveedor, moneda_pago, certificacion } } } })`;
+            queriesExecuted.push(sqlPrisma);
+            
+            const newActor = await prisma.actor_comercial.create({
+                data: {
+                    nombre_actor: prov.nombre_actor,
+                    apellido_actor: prov.apellido_actor,
+                    correo_actor: prov.correo_actor,
+                    tel_actor: prov.tel_actor,
+                    dir_actor: prov.dir_actor,
+                    proveedor: {
+                        create: {
+                            razon_social: prov.razon_social,
+                            nif_proveedor: prov.nif_proveedor,
+                            moneda_pago: prov.moneda_pago,
+                            certificacion: prov.certificacion
+                        }
+                    }
+                },
+                include: { proveedor: true }
+            });
 
             return {
-                data: { id_actor: idActor, ...prov },
+                data: { id_actor: newActor.id_actor, ...prov },
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     async updateProveedorCrud(id: number, prov: any) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Actualizando Proveedor y su Actor Comercial asociado'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
+            const sqlPrisma = `prisma.proveedor.update({ where: { id_actor: ${id} }, data: { razon_social, nif_proveedor, moneda_pago, certificacion, actor_comercial: { update: { ... } } } })`;
+            queriesExecuted.push(sqlPrisma);
 
-            const sqlActor = `UPDATE ACTOR_COMERCIAL SET nombre_actor = $1, apellido_actor = $2, correo_actor = $3, tel_actor = $4, dir_actor = $5 WHERE id_actor = $6;`;
-            queriesExecuted.push(sqlActor);
-            await client.query(sqlActor, [prov.nombre_actor, prov.apellido_actor, prov.correo_actor, prov.tel_actor, prov.dir_actor, id]);
-
-            const sqlProv = `UPDATE PROVEEDOR SET razon_social = $1, nif_proveedor = $2, moneda_pago = $3, certificacion = $4 WHERE id_actor = $5 RETURNING *;`;
-            queriesExecuted.push(sqlProv);
-            await client.query(sqlProv, [prov.razon_social, prov.nif_proveedor, prov.moneda_pago, prov.certificacion, id]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            await prisma.proveedor.update({
+                where: { id_actor: id },
+                data: {
+                    razon_social: prov.razon_social,
+                    nif_proveedor: prov.nif_proveedor,
+                    moneda_pago: prov.moneda_pago,
+                    certificacion: prov.certificacion,
+                    actor_comercial: {
+                        update: {
+                            nombre_actor: prov.nombre_actor,
+                            apellido_actor: prov.apellido_actor,
+                            correo_actor: prov.correo_actor,
+                            tel_actor: prov.tel_actor,
+                            dir_actor: prov.dir_actor
+                        }
+                    }
+                }
+            });
 
             return {
                 data: { id_actor: id, ...prov },
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
 
     async deleteProveedorCrud(id: number) {
-        const client = await pool.connect();
-        const queriesExecuted: string[] = [];
+        const queriesExecuted: string[] = ['// Eliminando Proveedor y Actor Comercial (Transaccional)'];
         try {
-            await client.query('BEGIN');
-            queriesExecuted.push('BEGIN;');
+            const sqlPrisma = `prisma.$transaction([ prisma.proveedor.delete({ where: { id_actor: ${id} } }), prisma.actor_comercial.delete({ where: { id_actor: ${id} } }) ])`;
+            queriesExecuted.push(sqlPrisma);
 
-            const sqlProv = `DELETE FROM PROVEEDOR WHERE id_actor = $1;`;
-            queriesExecuted.push(sqlProv);
-            await client.query(sqlProv, [id]);
-
-            const sqlActor = `DELETE FROM ACTOR_COMERCIAL WHERE id_actor = $1 RETURNING *;`;
-            queriesExecuted.push(sqlActor);
-            const result = await client.query(sqlActor, [id]);
-
-            await client.query('COMMIT');
-            queriesExecuted.push('COMMIT;');
+            const [, actorResult] = await prisma.$transaction([
+                prisma.proveedor.delete({ where: { id_actor: id } }),
+                prisma.actor_comercial.delete({ where: { id_actor: id } })
+            ]);
 
             return {
-                data: result.rows[0],
+                data: actorResult,
                 sql: queriesExecuted.join('\n\n')
             };
         } catch (error) {
-            await client.query('ROLLBACK');
             throw error;
-        } finally {
-            client.release();
         }
     }
-}
+}

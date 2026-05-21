@@ -5,6 +5,11 @@ import { TiendaService } from './services/TiendaService.js';
 import { initializeDatabaseIfEmpty } from './utils/initDatabase.js';
 import { prisma } from './prisma.js';
 
+// Polyfill para serializar BigInt a String en JSON.stringify (necesario para count() de Prisma)
+(BigInt.prototype as any).toJSON = function () {
+    return this.toString();
+};
+
 const app = express();
 const PORT = process.env['PORT'] ?? '3002';
 const tiendaService = new TiendaService();
