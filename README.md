@@ -1,4 +1,4 @@
-# Proyecto 2 Bases de Datos - TiendaDB
+# Proyecto 3 Bases de Datos - TiendaDB
 Enya Gálvez - 24693
 
 Este proyecto consiste en un sistema de gestión de tienda con un frontend en React (Vite) y un backend en Node.js (Express) conectado a una base de datos PostgreSQL.
@@ -41,5 +41,19 @@ Si tienes conflictos de puertos con otros proyectos o contenedores y necesitas c
 
 - **Para cambiar el puerto del frontend**: Modifica la variable `FRONTEND_PORT` en tu `.env` (por ejemplo: `FRONTEND_PORT=8080`). El contenedor internamente siempre usa el puerto 80 gracias a Nginx.
 - **Para cambiar el puerto del backend**: Modifica la variable `PORT` en tu `.env`. **¡Atención!** Si cambias el `PORT` del backend, también debes actualizar la variable `VITE_API_URL` en tu `.env` para que el frontend sepa dónde conectarse. Por ejemplo, si usas `PORT=4000`, debes poner `VITE_API_URL=http://localhost:4000/api`.
+
+## Sistema de Usuarios y Roles (RBAC)
+El proyecto incluye un sistema de seguridad de mínimo privilegio basado en autenticación JWT desde el backend y protegido a nivel de roles en PostgreSQL.
+
+### Usuarios de Prueba
+Para iniciar sesión en el frontend, puedes utilizar cualquiera de los siguientes usuarios. Todos tienen la contraseña `secret`:
+
+| Usuario         | Rol           | Acceso y Privilegios |
+|-----------------|---------------|----------------------|
+| `gerente1`      | Gerente       | Acceso total al sistema, reportes y dashboards gerenciales. |
+| `cajero1`       | Cajero        | Puede procesar ventas, gestionar clientes y ver catálogo. |
+| `almacenista1`  | Almacenista   | Puede gestionar inventarios, productos, categorías y ver proveedores. |
+| `proveedor1`    | Proveedor     | Visibilidad únicamente de sus productos provistos. |
+| `cliente1`      | Cliente       | Visibilidad del catálogo general de productos de la tienda. |
 
 Enlace al repositorio: [https://github.com/EnyaGalvez/ProyectoTiendaDB.git](https://github.com/EnyaGalvez/ProyectoTiendaDB.git)
