@@ -10,11 +10,12 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (login(password)) {
+    const success = await login(username, password);
+    if (success) {
       navigate('/inicio');
     } else {
       setError('Credenciales incorrectas. Inténtalo de nuevo.');

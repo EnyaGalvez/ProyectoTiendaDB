@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API } from '../../utils';
+import { API, authFetch } from '../../utils';
 import { TypewriterSqlViewer } from '../ui';
 
 export function TransaccionCajero() {
@@ -16,7 +16,7 @@ export function TransaccionCajero() {
   const ejecutarTx = async () => {
     setLoading(true); setLogs(''); setIsError(false);
     try {
-      const res = await fetch(`${API}/transaccion/cajero`, {
+      const res = await authFetch(`${API}/transaccion/cajero`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           actor: { nombre_actor: form.nombre, apellido_actor: form.apellido, correo_actor: form.correo, tel_actor: form.tel, dir_actor: form.dir },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Producto } from '../../types';
-import { API, useFetch } from '../../utils';
+import { useFetch, API, authFetch } from '../../utils';
 import { EmptyState, SqlViewer } from '../ui';
 
 export function CrudProductos() {
@@ -11,14 +11,14 @@ export function CrudProductos() {
     e.preventDefault();
     const method = modalObj?.id_producto ? 'PUT' : 'POST';
     const url = modalObj?.id_producto ? `${API}/productos/${modalObj.id_producto}` : `${API}/productos`;
-    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(modalObj) });
+    await authFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(modalObj) });
     setModalObj(null);
     refetch();
   };
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Seguro que deseas eliminar este producto?')) {
-      await fetch(`${API}/productos/${id}`, { method: 'DELETE' });
+      await authFetch(`${API}/productos/${id}`, { method: 'DELETE' });
       refetch();
     }
   };

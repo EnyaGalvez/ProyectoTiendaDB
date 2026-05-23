@@ -32,7 +32,11 @@ export function useFetch<T>(url: string) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(url);
+      const token = sessionStorage.getItem('token');
+      const headers: HeadersInit = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(url, { headers });
 
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("text/html")) {
@@ -55,4 +59,13 @@ export function useFetch<T>(url: string) {
   }, [fetchData]);
 
   return { data, sql, loading, error, refetch: fetchData };
+}
+
+export async function authFetch(url: string, options: RequestInit = {}) {
+  const token = sessionStorage.getItem('token');
+  const headers: HeadersInit = { ...options.headers } as Record<string, string>;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, { ...options, headers });
 }

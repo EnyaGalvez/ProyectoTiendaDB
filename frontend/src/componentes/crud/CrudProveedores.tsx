@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Proveedor } from '../../types';
-import { API, useFetch } from '../../utils';
+import { useFetch, API, authFetch } from '../../utils';
 import { EmptyState, SqlViewer } from '../ui';
 
 export function CrudProveedores() {
@@ -12,7 +12,7 @@ export function CrudProveedores() {
     const method = modalObj?.id_actor ? 'PUT' : 'POST';
     const url = modalObj?.id_actor ? `${API}/proveedores-crud/${modalObj.id_actor}` : `${API}/proveedores-crud`;
 
-    await fetch(url, {
+    await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(modalObj)
@@ -23,7 +23,7 @@ export function CrudProveedores() {
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Seguro que deseas eliminar este proveedor? Se eliminará tanto el registro de Proveedor como el de Actor Comercial.')) {
-      await fetch(`${API}/proveedores-crud/${id}`, { method: 'DELETE' });
+      await authFetch(`${API}/proveedores-crud/${id}`, { method: 'DELETE' });
       refetch();
     }
   };

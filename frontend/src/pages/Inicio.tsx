@@ -14,18 +14,20 @@ type Tab = 'catalogo' | 'clientes' | 'empleados' | 'crud_cat' | 'crud_prod' | 'c
 
 export function Inicio() {
   const [activeTab, setActiveTab] = useState<Tab>('catalogo');
-  const { logout } = useAuth();
+  const { logout, userRole } = useAuth();
 
-  const tabs: { id: Tab; label: string; icon: string }[] = [
-    { id: 'catalogo', label: 'Dashboard Catálogo', icon: '📦' },
-    { id: 'clientes', label: 'Dashboard Clientes', icon: '👥' },
-    { id: 'empleados', label: 'Dashboard Empleados', icon: '🏢' },
-    { id: 'crud_cat', label: 'CRUD Categorías', icon: '📁' },
-    { id: 'crud_prod', label: 'CRUD Productos', icon: '🛒' },
-    { id: 'crud_cli', label: 'CRUD Clientes', icon: '👤' },
-    { id: 'crud_prov', label: 'CRUD Proveedores', icon: '🚚' },
-    { id: 'tx_cajero', label: 'TX Registro Cajero', icon: '🔐' },
+  const allTabs: { id: Tab; label: string; icon: string; roles: string[] }[] = [
+    { id: 'catalogo', label: 'Dashboard Catálogo', icon: '📦', roles: ['Gerente', 'Cajero', 'Almacenista', 'Proveedor', 'Cliente'] },
+    { id: 'clientes', label: 'Dashboard Clientes', icon: '👥', roles: ['Gerente', 'Cajero'] },
+    { id: 'empleados', label: 'Dashboard Empleados', icon: '🏢', roles: ['Gerente'] },
+    { id: 'crud_cat', label: 'CRUD Categorías', icon: '📁', roles: ['Gerente', 'Almacenista'] },
+    { id: 'crud_prod', label: 'CRUD Productos', icon: '🛒', roles: ['Gerente', 'Almacenista'] },
+    { id: 'crud_cli', label: 'CRUD Clientes', icon: '👤', roles: ['Gerente', 'Cajero'] },
+    { id: 'crud_prov', label: 'CRUD Proveedores', icon: '🚚', roles: ['Gerente', 'Almacenista'] },
+    { id: 'tx_cajero', label: 'TX Registro Cajero', icon: '🔐', roles: ['Gerente'] },
   ];
+
+  const tabs = allTabs.filter(t => userRole && t.roles.includes(userRole));
 
   return (
     <div className="dashboard">

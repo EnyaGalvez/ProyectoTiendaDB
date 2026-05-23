@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ClienteCrud } from '../../types';
-import { API, useFetch } from '../../utils';
+import { useFetch, API, authFetch } from '../../utils';
 import { EmptyState, SqlViewer } from '../ui';
 
 export function CrudClientes() {
@@ -12,7 +12,7 @@ export function CrudClientes() {
     const method = modalObj?.id_actor ? 'PUT' : 'POST';
     const url = modalObj?.id_actor ? `${API}/clientes-crud/${modalObj.id_actor}` : `${API}/clientes-crud`;
 
-    await fetch(url, {
+    await authFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(modalObj)
@@ -23,7 +23,7 @@ export function CrudClientes() {
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Seguro que deseas eliminar este cliente? Se eliminará tanto el registro de Cliente como el de Actor Comercial.')) {
-      await fetch(`${API}/clientes-crud/${id}`, { method: 'DELETE' });
+      await authFetch(`${API}/clientes-crud/${id}`, { method: 'DELETE' });
       refetch();
     }
   };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Categoria } from '../../types';
-import { API, useFetch } from '../../utils';
+import { useFetch, API, authFetch } from '../../utils';
 import { EmptyState, SqlViewer } from '../ui';
 
 export function CrudCategorias() {
@@ -11,14 +11,14 @@ export function CrudCategorias() {
     e.preventDefault();
     const method = modalObj?.id_categoria ? 'PUT' : 'POST';
     const url = modalObj?.id_categoria ? `${API}/categorias/${modalObj.id_categoria}` : `${API}/categorias`;
-    await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(modalObj) });
+    await authFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(modalObj) });
     setModalObj(null);
     refetch();
   };
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Seguro que deseas eliminar esta categoría?')) {
-      await fetch(`${API}/categorias/${id}`, { method: 'DELETE' });
+      await authFetch(`${API}/categorias/${id}`, { method: 'DELETE' });
       refetch();
     }
   };
