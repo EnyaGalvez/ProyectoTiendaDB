@@ -17,6 +17,7 @@ model actor_comercial {
   cliente        cliente?
   empleado       empleado?
   proveedor      proveedor?
+  usuario        usuario?
 }
 
 model almacenista {
@@ -134,4 +135,13 @@ model venta {
   presente_en      presente_en[]
   cajero           cajero        @relation(fields: [id_act_cajero], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "venta_caj")
   cliente          cliente       @relation(fields: [id_act_cliente], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "venta_cli")
+}
+
+model usuario {
+  id_usuario    Int             @id(map: "usuario_pk") @default(autoincrement())
+  id_actor      Int             @unique(map: "usuario_actor_uq")
+  username      String          @unique(map: "usuario_username_uq") @db.VarChar(100)
+  password_hash String          @db.VarChar(255)
+  rol           String          @db.VarChar(50)
+  actor_comercial actor_comercial @relation(fields: [id_actor], references: [id_actor], onDelete: NoAction, onUpdate: NoAction, map: "usr_actor")
 }

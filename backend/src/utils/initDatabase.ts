@@ -25,16 +25,26 @@ export async function initializeDatabaseIfEmpty() {
             
             const ddlPath = path.join(dbPath, 'ddlTienda.sql');
             const scriptPath = path.join(dbPath, 'scriptTienda.sql');
+            const rolesPath = path.join(dbPath, 'roles.sql');
 
             if (fs.existsSync(ddlPath) && fs.existsSync(scriptPath)) {
                 const ddl = fs.readFileSync(ddlPath, 'utf8');
                 const script = fs.readFileSync(scriptPath, 'utf8');
+                let roles = '';
+                if (fs.existsSync(rolesPath)) {
+                    roles = fs.readFileSync(rolesPath, 'utf8');
+                }
 
                 console.log('[DB Init] Ejecutando ddlTienda.sql...');
                 await pool.query(ddl);
 
                 console.log('[DB Init] Ejecutando scriptTienda.sql (datos iniciales)...');
                 await pool.query(script);
+
+                if (roles) {
+                    console.log('[DB Init] Ejecutando roles.sql...');
+                    await pool.query(roles);
+                }
 
                 console.log('[DB Init] Base de datos inicializada correctamente.');
             } else {

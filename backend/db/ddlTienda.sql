@@ -4,6 +4,7 @@
  */
 
 -- Limpieza previa para evitar errores si las tablas ya existen
+DROP TABLE IF EXISTS USUARIO CASCADE;
 DROP TABLE IF EXISTS PROVEE CASCADE;
 DROP TABLE IF EXISTS PRESENTE_EN CASCADE;
 DROP TABLE IF EXISTS FACTURA CASCADE;
@@ -206,3 +207,16 @@ JOIN ACTOR_COMERCIAL a ON e.id_actor = a.id_actor
 LEFT JOIN GERENTE g ON e.id_actor = g.id_actor
 LEFT JOIN CAJERO c ON e.id_actor = c.id_actor
 LEFT JOIN ALMACENISTA alm ON e.id_actor = alm.id_actor;
+
+/*
+ * Tabla USUARIO: almacena las credenciales de la aplicación y el rol
+ */
+CREATE TABLE USUARIO (
+    id_usuario SERIAL,
+    id_actor INT NOT NULL UNIQUE,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    rol VARCHAR(50) NOT NULL,
+    CONSTRAINT USUARIO_pk PRIMARY KEY (id_usuario),
+    CONSTRAINT USR_ACTOR FOREIGN KEY (id_actor) REFERENCES ACTOR_COMERCIAL (id_actor)
+);
