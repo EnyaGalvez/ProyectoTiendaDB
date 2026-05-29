@@ -151,49 +151,58 @@ export class TiendaService {
 
     async procesarTransaccionVenta(idCliente: number, idCajero: number, productos: any[]) {
         try {
-            const result = await prisma.$transaction(async (tx) => {
-                const newVenta = await tx.venta.create({
-                    data: {
-                        fecha_hora_venta: new Date(),
-                        id_act_cliente: idCliente,
-                        id_act_cajero: idCajero,
-                        factura: {
-                            create: {
-                                estado: 'Pagada'
-                            }
-                        }
-                    }
-                });
+            const logs: string[] = ['// Invocando Stored Procedure: sp_registrar_venta'];
+            const jsonProductos = JSON.stringify(productos);
+            const sql = `CALL sp_registrar_venta(${idCliente}, ${idCajero}, '${jsonProductos}'::json, null)`;
+            logs.push(`prisma.$queryRawUnsafe("${sql}")`);
+            
+            const result: any = await prisma.$queryRawUnsafe(sql);
+            const idVenta = result[0]?.p_id_venta;
 
-                for (const item of productos) {
-                    await tx.presente_en.create({
-                        data: {
-                            id_venta: newVenta.id_venta,
-                            id_producto: item.idProducto,
-                            cantidad_vendida: item.cantidad,
-                            precio_unitario_venta: item.precioUnitario
-                        }
-                    });
+            return { exito: true, idVenta, logs: logs.join('\n\n') };
+        } catch (error) {
+            console.error('[TiendaService] Error en procesarTransaccionVenta SP:', error);
+            throw error;
+        }
+    }
 
-                    const resStock = await tx.producto.updateMany({
-                        where: {
-                            id_producto: item.idProducto,
-                            stock: { gte: item.cantidad }
-                        },
-                        data: {
-                            stock: { decrement: item.cantidad }
-                        }
-                    });
+    async actualizarStockSP(idProducto: number, cantidadCambio: number) {
+        try {
+            const sql = `CALL sp_actualizar_stock(${idProducto}, ${cantidadCambio}, null)`;
+            const result: any = await prisma.$queryRawUnsafe(sql);
+            return { exito: true, nuevoStock: result[0]?.p_nuevo_stock, sql };
+        } catch (error) {
+            throw error;
+        }
+    }
 
-                    if (resStock.count === 0) {
-                        throw new Error(`Stock insuficiente para el producto ID: ${item.idProducto}`);
-                    }
-                }
-                
-                return newVenta.id_venta;
-            });
+    async crearProveedorConProductosSP(proveedor: any, productos: any[]) {
+        try {
+            const jsonProv = JSON.stringify(proveedor);
+            const jsonProd = JSON.stringify(productos);
+            const sql = `CALL sp_crear_proveedor_con_productos('${jsonProv}'::json, '${jsonProd}'::json, null)`;
+            const result: any = await prisma.$queryRawUnsafe(sql);
+            return { exito: true, idProveedor: result[0]?.p_id_proveedor, sql };
+        } catch (error) {
+            throw error;
+        }
+    }
 
-            return { exito: true, idVenta: result };
+    async anularVentaSP(idVenta: number) {
+        try {
+            const sql = `CALL sp_anular_venta(${idVenta})`;
+            await prisma.$executeRawUnsafe(sql);
+            return { exito: true, sql };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async obtenerReporteVentasSP(fechaInicio: string, fechaFin: string) {
+        try {
+            const sql = `SELECT * FROM fn_reporte_ventas_periodo('${fechaInicio}'::timestamp, '${fechaFin}'::timestamp)`;
+            const result = await prisma.$queryRawUnsafe(sql);
+            return { data: result, sql };
         } catch (error) {
             throw error;
         }

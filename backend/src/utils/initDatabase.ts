@@ -46,6 +46,13 @@ export async function initializeDatabaseIfEmpty() {
                     await pool.query(roles);
                 }
 
+                const spPath = path.join(dbPath, 'stored_procedures.sql');
+                if (fs.existsSync(spPath)) {
+                    console.log('[DB Init] Ejecutando stored_procedures.sql...');
+                    const spScript = fs.readFileSync(spPath, 'utf8');
+                    await pool.query(spScript);
+                }
+
                 console.log('[DB Init] Base de datos inicializada correctamente.');
             } else {
                 console.warn('[DB Init] No se encontraron los archivos SQL en', dbPath);
