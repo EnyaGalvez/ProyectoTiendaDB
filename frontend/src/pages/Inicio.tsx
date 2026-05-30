@@ -14,7 +14,7 @@ type Tab = 'catalogo' | 'clientes' | 'empleados' | 'crud_cat' | 'crud_prod' | 'c
 
 export function Inicio() {
   const [activeTab, setActiveTab] = useState<Tab>('catalogo');
-  const { logout, userRole } = useAuth();
+  const { logout, userRole, username } = useAuth();
 
   const allTabs: { id: Tab; label: string; icon: string; roles: string[] }[] = [
     { id: 'catalogo', label: 'Dashboard Catálogo', icon: '📦', roles: ['Gerente', 'Cajero', 'Almacenista', 'Proveedor', 'Cliente'] },
@@ -39,11 +39,27 @@ export function Inicio() {
             <h2>Panel de administración y control</h2>
           </div>
         </div>
-        <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div><div className="status-dot" style={{ display: 'inline-block' }} /> Conectado</div>
+        <div className="header-status" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '1.2' }}>
+            <span style={{ fontWeight: 600, fontSize: '1.05rem', color: '#fff' }}>{username || userRole}</span>
+            <span style={{ fontSize: '0.85rem', color: '#e0e0e0', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div className="status-dot" style={{ display: 'inline-block', width: '8px', height: '8px' }} /> Conectado
+            </span>
+          </div>
           <button
             onClick={logout}
-            style={{ padding: '0.3rem 0.8rem', background: '#a6105bff', color: '#ffffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 500 }}
+            style={{
+              padding: '0.4rem 1rem',
+              background: 'transparent',
+              color: '#ffe7e7ff',
+              border: '1px solid rgba(169, 124, 124, 0.4)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 500,
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = '#fff'; }}
+            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; }}
           >
             Cerrar sesión
           </button>

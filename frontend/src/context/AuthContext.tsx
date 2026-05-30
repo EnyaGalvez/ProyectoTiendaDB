@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem('token');
+    const token = localStorage.getItem('token');
     if (token) {
       try {
         const decoded = jwtDecode<UserPayload>(token);
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (res.ok) {
         const data = await res.json();
-        sessionStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.token);
         const decoded = jwtDecode<UserPayload>(data.token);
         setIsAuthenticated(true);
         setUserRole(decoded.rol);
@@ -68,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
     setUserRole(null);
     setUsername(null);
-    sessionStorage.removeItem('token');
+    localStorage.removeItem('token');
   };
 
   return (

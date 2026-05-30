@@ -10,7 +10,7 @@ export function TransaccionCajero() {
   const [form, setForm] = useState({
     nombre: 'Juan', apellido: 'Perez', correo: 'juan@test.com', tel: '123456', dir: 'Ciudad',
     num_empleado: 'EMP-999', puesto: 'Cajero', salario: 3000, nit: '1234-5', horario: 'Diurno',
-    id_gerente: 5 // Asumimos que 5 es gerente válido en la BD inicial, poner 999 fallará
+    id_gerente: 5
   });
 
   const ejecutarTx = async () => {

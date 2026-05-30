@@ -32,7 +32,7 @@ export function useFetch<T>(url: string) {
     setLoading(true);
     setError(null);
     try {
-      const token = sessionStorage.getItem('token');
+      const token = localStorage.getItem('token');
       const headers: HeadersInit = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -62,7 +62,7 @@ export function useFetch<T>(url: string) {
 }
 
 export async function authFetch(url: string, options: RequestInit = {}) {
-  const token = sessionStorage.getItem('token');
+  const token = localStorage.getItem('token');
   const headers: HeadersInit = { ...options.headers } as Record<string, string>;
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

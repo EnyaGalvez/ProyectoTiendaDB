@@ -31,7 +31,7 @@ app.get('/api/health', (_req, res) => { // Health Check
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/prisma-health', async (_req, res) => {
+app.get('/api/prisma-health', async (req, res) => {
     try {
         // Hacemos un count simple en la tabla producto usando Prisma
         const productCount = await prisma.producto.count();
@@ -92,9 +92,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Rutas de la Tienda (Protegidas)
-app.get('/api/empleados', verifyToken, requireRole(['Gerente']), async (_req, res) => {
+app.get('/api/empleados', verifyToken, requireRole(['Gerente']), async (req, res) => {
     try {
-        const result = await tiendaService.obtenerDirectorioEmpleados();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.obtenerDirectorioEmpleados(tx);
+        });
         res.json(result);
     } catch (error) {
         console.error('[GET /api/empleados]', error);
@@ -102,9 +105,12 @@ app.get('/api/empleados', verifyToken, requireRole(['Gerente']), async (_req, re
     }
 });
 
-app.get('/api/catalogo', verifyToken, async (_req, res) => {
+app.get('/api/catalogo', verifyToken, async (req, res) => {
     try {
-        const result = await tiendaService.obtenerCatalogoDetallado();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.obtenerCatalogoDetallado((req as any).user, tx);
+        });
         res.json(result);
     } catch (error) {
         console.error('[GET /api/catalogo]', error);
@@ -114,9 +120,12 @@ app.get('/api/catalogo', verifyToken, async (_req, res) => {
 
 app.get('/api/clientes/mejores', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
+        const rol = (req as any).user.rol;
         const queryMonto = parseFloat(req.query['monto'] as string);
         const monto = isNaN(queryMonto) ? 1000 : queryMonto;
-        const result = await tiendaService.obtenerMejoresClientes(monto);
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.obtenerMejoresClientes(monto, tx);
+        });
         res.json(result);
     } catch (error) {
         console.error('[GET /api/clientes/mejores]', error);
@@ -126,6 +135,7 @@ app.get('/api/clientes/mejores', verifyToken, requireRole(['Gerente', 'Cajero'])
 
 app.post('/api/ventas', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
+        const rol = (req as any).user.rol;
         const { idCliente, idCajero, productos } = req.body as {
             idCliente: number;
             idCajero: number;
@@ -137,7 +147,9 @@ app.post('/api/ventas', verifyToken, requireRole(['Gerente', 'Cajero']), async (
             return;
         }
 
-        const resultado = await tiendaService.procesarTransaccionVenta(idCliente, idCajero, productos);
+        const resultado = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.procesarTransaccionVenta(idCliente, idCajero, productos, tx);
+        });
         res.status(201).json(resultado);
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Error desconocido.';
@@ -147,9 +159,12 @@ app.post('/api/ventas', verifyToken, requireRole(['Gerente', 'Cajero']), async (
 });
 
 // CRUD CATEGORIAS
-app.get('/api/categorias', verifyToken, requireRole(['Gerente', 'Almacenista', 'Cajero', 'Cliente', 'Proveedor']), async (_req, res) => {
+app.get('/api/categorias', verifyToken, requireRole(['Gerente', 'Almacenista', 'Cajero', 'Cliente', 'Proveedor']), async (req, res) => {
     try {
-        const result = await tiendaService.getCategorias();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.getCategorias(tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al obtener categorias' });
@@ -158,7 +173,10 @@ app.get('/api/categorias', verifyToken, requireRole(['Gerente', 'Almacenista', '
 app.post('/api/categorias', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
         const { nombre, descripcion } = req.body;
-        const result = await tiendaService.createCategoria(nombre, descripcion);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.createCategoria(nombre, descripcion, tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al crear categoria' });
@@ -167,7 +185,10 @@ app.post('/api/categorias', verifyToken, requireRole(['Gerente', 'Almacenista'])
 app.put('/api/categorias/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
         const { nombre, descripcion } = req.body;
-        const result = await tiendaService.updateCategoria(Number(req.params.id), nombre, descripcion);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.updateCategoria(Number(req.params.id), nombre, descripcion, tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al actualizar categoria' });
@@ -175,7 +196,10 @@ app.put('/api/categorias/:id', verifyToken, requireRole(['Gerente', 'Almacenista
 });
 app.delete('/api/categorias/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.deleteCategoria(Number(req.params.id));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.deleteCategoria(Number(req.params.id), tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al borrar categoria' });
@@ -183,9 +207,12 @@ app.delete('/api/categorias/:id', verifyToken, requireRole(['Gerente', 'Almaceni
 });
 
 // CRUD PRODUCTOS
-app.get('/api/productos', verifyToken, requireRole(['Gerente', 'Almacenista', 'Cajero', 'Cliente', 'Proveedor']), async (_req, res) => {
+app.get('/api/productos', verifyToken, requireRole(['Gerente', 'Almacenista', 'Cajero', 'Cliente', 'Proveedor']), async (req, res) => {
     try {
-        const result = await tiendaService.getProductos();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.getProductos((req as any).user, tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al obtener productos' });
@@ -193,7 +220,10 @@ app.get('/api/productos', verifyToken, requireRole(['Gerente', 'Almacenista', 'C
 });
 app.post('/api/productos', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.createProducto(req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.createProducto(req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al crear producto' });
@@ -201,7 +231,10 @@ app.post('/api/productos', verifyToken, requireRole(['Gerente', 'Almacenista']),
 });
 app.put('/api/productos/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.updateProducto(Number(req.params.id), req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.updateProducto(Number(req.params.id), req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al actualizar producto' });
@@ -209,7 +242,10 @@ app.put('/api/productos/:id', verifyToken, requireRole(['Gerente', 'Almacenista'
 });
 app.delete('/api/productos/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.deleteProducto(Number(req.params.id));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.deleteProducto(Number(req.params.id), tx);
+        });
         res.json(result);
     } catch (e) {
         res.status(500).json({ error: 'Error al borrar producto' });
@@ -217,9 +253,12 @@ app.delete('/api/productos/:id', verifyToken, requireRole(['Gerente', 'Almacenis
 });
 
 // CRUD CLIENTES
-app.get('/api/clientes-crud', verifyToken, requireRole(['Gerente', 'Cajero']), async (_req, res) => {
+app.get('/api/clientes-crud', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
-        const result = await tiendaService.getClientesCrud();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.getClientesCrud(tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[GET /api/clientes-crud]', e);
@@ -228,7 +267,10 @@ app.get('/api/clientes-crud', verifyToken, requireRole(['Gerente', 'Cajero']), a
 });
 app.post('/api/clientes-crud', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
-        const result = await tiendaService.createClienteCrud(req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.createClienteCrud(req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[POST /api/clientes-crud]', e);
@@ -237,7 +279,10 @@ app.post('/api/clientes-crud', verifyToken, requireRole(['Gerente', 'Cajero']), 
 });
 app.put('/api/clientes-crud/:id', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
-        const result = await tiendaService.updateClienteCrud(Number(req.params.id), req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.updateClienteCrud(Number(req.params.id), req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[PUT /api/clientes-crud]', e);
@@ -246,7 +291,10 @@ app.put('/api/clientes-crud/:id', verifyToken, requireRole(['Gerente', 'Cajero']
 });
 app.delete('/api/clientes-crud/:id', verifyToken, requireRole(['Gerente', 'Cajero']), async (req, res) => {
     try {
-        const result = await tiendaService.deleteClienteCrud(Number(req.params.id));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.deleteClienteCrud(Number(req.params.id), tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[DELETE /api/clientes-crud]', e);
@@ -255,9 +303,12 @@ app.delete('/api/clientes-crud/:id', verifyToken, requireRole(['Gerente', 'Cajer
 });
 
 // CRUD PROVEEDORES
-app.get('/api/proveedores-crud', verifyToken, requireRole(['Gerente', 'Almacenista']), async (_req, res) => {
+app.get('/api/proveedores-crud', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.getProveedoresCrud();
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.getProveedoresCrud(tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[GET /api/proveedores-crud]', e);
@@ -266,7 +317,10 @@ app.get('/api/proveedores-crud', verifyToken, requireRole(['Gerente', 'Almacenis
 });
 app.post('/api/proveedores-crud', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.createProveedorCrud(req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.createProveedorCrud(req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[POST /api/proveedores-crud]', e);
@@ -275,7 +329,10 @@ app.post('/api/proveedores-crud', verifyToken, requireRole(['Gerente', 'Almaceni
 });
 app.put('/api/proveedores-crud/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.updateProveedorCrud(Number(req.params.id), req.body);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.updateProveedorCrud(Number(req.params.id), req.body, tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[PUT /api/proveedores-crud]', e);
@@ -284,7 +341,10 @@ app.put('/api/proveedores-crud/:id', verifyToken, requireRole(['Gerente', 'Almac
 });
 app.delete('/api/proveedores-crud/:id', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
-        const result = await tiendaService.deleteProveedorCrud(Number(req.params.id));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.deleteProveedorCrud(Number(req.params.id), tx);
+        });
         res.json(result);
     } catch (e) {
         console.error('[DELETE /api/proveedores-crud]', e);
@@ -296,7 +356,10 @@ app.delete('/api/proveedores-crud/:id', verifyToken, requireRole(['Gerente', 'Al
 app.post('/api/transaccion/cajero', verifyToken, requireRole(['Gerente']), async (req, res) => {
     try {
         const { actor, empleado, cajero } = req.body;
-        const result = await tiendaService.registrarCajeroTransaccion(actor, empleado, cajero);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.registrarCajeroTransaccion(actor, empleado, cajero, tx);
+        });
         res.json(result);
     } catch (error: any) {
         console.error('[POST /api/transaccion/cajero] ROLLBACK', error);
@@ -308,7 +371,10 @@ app.post('/api/transaccion/cajero', verifyToken, requireRole(['Gerente']), async
 app.put('/api/productos/:id/stock', verifyToken, requireRole(['Gerente', 'Almacenista']), async (req, res) => {
     try {
         const { cantidadCambio } = req.body;
-        const result = await tiendaService.actualizarStockSP(Number(req.params.id), Number(cantidadCambio));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.actualizarStockSP(Number(req.params.id), Number(cantidadCambio), tx);
+        });
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Error al actualizar stock' });
@@ -318,7 +384,10 @@ app.put('/api/productos/:id/stock', verifyToken, requireRole(['Gerente', 'Almace
 app.post('/api/proveedores/batch', verifyToken, requireRole(['Gerente']), async (req, res) => {
     try {
         const { proveedor, productos } = req.body;
-        const result = await tiendaService.crearProveedorConProductosSP(proveedor, productos);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.crearProveedorConProductosSP(proveedor, productos, tx);
+        });
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Error al crear proveedor en batch' });
@@ -327,7 +396,10 @@ app.post('/api/proveedores/batch', verifyToken, requireRole(['Gerente']), async 
 
 app.post('/api/ventas/:id/anular', verifyToken, requireRole(['Gerente']), async (req, res) => {
     try {
-        const result = await tiendaService.anularVentaSP(Number(req.params.id));
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.anularVentaSP(Number(req.params.id), tx);
+        });
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Error al anular venta' });
@@ -338,7 +410,10 @@ app.get('/api/reportes/ventas', verifyToken, requireRole(['Gerente', 'Cajero']),
     try {
         const { inicio, fin } = req.query;
         if (!inicio || !fin) return res.status(400).json({ error: 'Faltan parámetros inicio o fin' });
-        const result = await tiendaService.obtenerReporteVentasSP(inicio as string, fin as string);
+        const rol = (req as any).user.rol;
+        const result = await tiendaService.runWithRole(rol, async (tx) => {
+            return await tiendaService.obtenerReporteVentasSP(inicio as string, fin as string, tx);
+        });
         res.json(result);
     } catch (error: any) {
         res.status(500).json({ error: error.message || 'Error al generar reporte de ventas' });
