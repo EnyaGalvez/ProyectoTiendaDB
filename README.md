@@ -45,15 +45,35 @@ Si tienes conflictos de puertos con otros proyectos o contenedores y necesitas c
 ## Sistema de Usuarios y Roles (RBAC)
 El proyecto incluye un sistema de seguridad de mínimo privilegio basado en autenticación JWT desde el backend y protegido a nivel de roles en PostgreSQL.
 
-### Usuarios de Prueba
+### Usuarios creados
 Para iniciar sesión en el frontend, puedes utilizar cualquiera de los siguientes usuarios. Todos tienen la contraseña `secret`:
 
 | Usuario         | Rol           | Acceso y Privilegios |
 |-----------------|---------------|----------------------|
-| `gerente1`      | Gerente       | Acceso total al sistema, reportes y dashboards gerenciales. |
+| `gerente1`      | Gerente       | Acceso total al sistema, reportes y dashboards gerenciales (superuser). |
 | `cajero1`       | Cajero        | Puede procesar ventas, gestionar clientes y ver catálogo. |
 | `almacenista1`  | Almacenista   | Puede gestionar inventarios, productos, categorías y ver proveedores. |
 | `proveedor1`    | Proveedor     | Visibilidad únicamente de sus productos provistos. |
 | `cliente1`      | Cliente       | Visibilidad del catálogo general de productos de la tienda. |
+
+## Arquitectura
+
+### 1. Stored Procedures / Consultas Complejas
+Previo a la migración total a Prisma, la lógica fuerte de la base de datos se encapsuló en Stored Procedures y scripts SQL crudos. Estas operaciones ahora han sido traducidas a métodos equivalentes en Prisma:
+- **`procesar_venta` (ahora `procesarTransaccionVenta`)**: Valida disponibilidad de inventario, registra la compra, inserta los detalles y emite la factura actualizando el stock.
+- **`catalogo_detallado`**: Extrae la información de los productos, incluyendo datos tabulares vinculados a su proveedor y almacenista encargado.
+- **`mejores_clientes`**: Agrupa y suma el total de ventas por cliente, ordenándolos para reportes gerenciales.
+- **`directorio_empleados`**: Recopila y cruza datos para mostrar empleados según su cargo específico (Cajero, Almacenista o Gerente).
+
+### 2. Transacciones (ACID)
+El sistema hace un uso intensivo de transacciones atómicas para proteger la integridad de los datos, orquestadas mediante las *Interactive Transactions* de Prisma (`$transaction`):
+- **Transacción de Venta (`procesarTransaccionVenta`)**: Garantiza que si falla la inserción de un producto en el detalle (`presente_en`) o la creación de la `factura`, se realice un *rollback* completo y no se descuente el inventario de manera errónea.
+- **Transacciones de Seguridad por Rol (`runWithRole`)**: Cada llamada al servicio envuelve la ejecución en una transacción donde el primer paso es establecer la identidad de PostgreSQL (`SET LOCAL ROLE <rol>`), asegurando que las operaciones siguientes hereden únicamente los permisos de ese rol.
+
+### Integración con Prisma ORM
+Prisma ahora es el encargado de:
+- Ejecutar consultas relacionales tipadas (`findMany`, `include`).
+- Orquestar transacciones seguras en memoria (`$transaction`).
+- Aplicar de forma dinámica las políticas de seguridad de PostgreSQL inyectando el rol del usuario conectado mediante `SET LOCAL ROLE`, asegurando el Principio de Mínimo Privilegio.
 
 Enlace al repositorio: [https://github.com/EnyaGalvez/ProyectoTiendaDB.git](https://github.com/EnyaGalvez/ProyectoTiendaDB.git)
