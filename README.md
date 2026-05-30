@@ -3,6 +3,12 @@ Enya Gálvez - 24693
 
 Este proyecto consiste en un sistema de gestión de tienda con un frontend en React (Vite) y un backend en Node.js (Express) conectado a una base de datos PostgreSQL.
 
+### Tecnologías
+•	Frontend: React 18.2, Vanilla CSS, Lucide React y Nginx
+•	Backend: Node.js 20 y Express
+•	Base de datos: PostgreSQL-alpine
+•	ORM: Prisma ORM v5.22.0
+
 ## Requisitos
 - [Docker](https://www.docker.com/get-started)
 - [Docker Compose](https://docs.docker.com/compose/install/)
@@ -22,10 +28,16 @@ Este proyecto consiste en un sistema de gestión de tienda con un frontend en Re
    ```
 
 3. **Levantar los contenedores**:
-   Ejecuta el siguiente comando en la raíz del proyecto:
-   ```bash
-   docker compose up
-   ```
+   Dependiendo de si es tu primera vez ejecutando el proyecto o no, elige uno de los siguientes comandos en la raíz del proyecto:
+
+   - **Caso A (Desde 0)**: Si es la primera vez que clonas o corres el proyecto, basta con ejecutar:
+     ```bash
+     docker compose up
+     ```
+   - **Caso B (Actualización / Reconstrucción)**: Si ya habías levantado el proyecto antes (versión anterior) y necesitas aplicar nuevos cambios (como la reciente migración a Prisma), utiliza el flag `--build` para forzar la reconstrucción de las imágenes:
+     ```bash
+     docker compose up --build
+     ```
 
 4. **Acceder a la aplicación**:
    - **Frontend**: [http://localhost:5174](http://localhost:5174) (o el puerto que hayas configurado en `FRONTEND_PORT` dentro de tu `.env`).
